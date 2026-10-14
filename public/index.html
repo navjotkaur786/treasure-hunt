@@ -7,69 +7,104 @@
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1220;--card:#181c30;--tx:#eef0fa;--mu:#9aa0bd;--ac:#8b78ff;--bd:#2a3050}}
 :root[data-theme="dark"]{--bg:#0f1220;--card:#181c30;--tx:#eef0fa;--mu:#9aa0bd;--ac:#8b78ff;--bd:#2a3050}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:16px system-ui,sans-serif}
-.w{max-width:760px;margin:0 auto;padding:16px}h1{font-size:22px;margin:8px 0}h2{font-size:18px}
+.w{max-width:780px;margin:0 auto;padding:16px}h1{font-size:22px;margin:8px 0}h2{font-size:18px;margin-top:0}
 nav{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 16px}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:12px}
-input{width:100%;padding:11px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);margin:6px 0;font-size:16px}
+input,textarea,select{width:100%;padding:11px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);margin:5px 0;font:16px system-ui,sans-serif}
 button,.btn{background:var(--ac);color:#fff;border:0;border-radius:8px;padding:10px 16px;font-size:15px;cursor:pointer;text-decoration:none;display:inline-block}
-button.s{background:transparent;color:var(--tx);border:1px solid var(--bd)}button.on{background:var(--ac);color:#fff}
-.opt{display:block;width:100%;text-align:left;margin:6px 0;background:var(--bg);color:var(--tx);border:1px solid var(--bd)}
-.code{font:700 28px monospace;letter-spacing:2px;color:var(--ac)}.mu{color:var(--mu);font-size:14px}
+button.s{background:transparent;color:var(--tx);border:1px solid var(--bd)}button.on{background:var(--ac);color:#fff}button:disabled{opacity:.5}
+.opt{display:block;width:100%;text-align:left;margin:7px 0;background:var(--bg);color:var(--tx);border:1px solid var(--bd);padding:13px}
+.code{font:700 30px monospace;letter-spacing:3px;color:var(--ac)}.mu{color:var(--mu);font-size:14px}
 .ok{color:var(--ok)}.bad{color:var(--bad)}table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid var(--bd);text-align:left;font-size:14px;vertical-align:top}
-.bar{height:8px;background:var(--bd);border-radius:6px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ok)}
-.scroll{overflow-x:auto}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
-.clue{border-left:4px solid var(--ac);padding:8px 12px;background:var(--bg);border-radius:6px}
-</style></head><body><div class="w" id="app">Loading…</div>
+.bar{height:8px;background:var(--bd);border-radius:6px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ok);transition:width .5s}
+.scroll{overflow-x:auto}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.clue{border-left:4px solid var(--ac);padding:10px 12px;background:var(--bg);border-radius:6px;font-size:18px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.row input{flex:1;min-width:120px}
+.win{text-align:center;position:relative;z-index:2;padding:30px 12px}
+.trophy{font-size:90px;display:inline-block;animation:bounce 1.2s infinite}
+.big{font-size:34px;font-weight:800;animation:pop .8s both;margin:6px 0}
+.tn{font-size:30px;font-weight:800;background:linear-gradient(90deg,#ff7a00,#e91e63,#5b3df5,#00bcd4,#ff7a00);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 3s linear infinite}
+@keyframes bounce{0%,100%{transform:translateY(0) rotate(-6deg)}50%{transform:translateY(-22px) rotate(6deg)}}
+@keyframes pop{0%{transform:scale(.2);opacity:0}70%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+@keyframes shine{to{background-position:300% 0}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.shake{animation:shake .35s}
+#cf{position:fixed;inset:0;pointer-events:none;z-index:1}
+@media print{nav,.noprint,.mu.np{display:none!important}body{background:#fff;color:#000}.card{break-inside:avoid}}
+</style></head><body><div class="w" id="app">Loading…</div><canvas id="cf"></canvas>
 <script>
-const MAXM=3,TOTAL=5;
-const $=s=>document.querySelector(s),app=$("#app"),esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const $=s=>document.querySelector(s),app=$("#app"),esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const LS={g(k){try{return localStorage.getItem(k)}catch(e){return null}},s(k,v){try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}}};
-async function api(p,method="GET",body){try{const h={"Content-Type":"application/json"};const t=LS.g("adm");if(t)h.Authorization="Bearer "+t;
+async function api(p,method="GET",body){try{const h={"Content-Type":"application/json"},t=LS.g("adm");if(t)h.Authorization="Bearer "+t;
  const r=await fetch(p,{method,headers:h,body:body?JSON.stringify(body):undefined});const j=await r.json();j._s=r.status;return j}catch(e){return{error:"Network error. Check your internet and try again.",_s:0}}}
 const fmt=t=>t?new Date(t).toLocaleTimeString():"-";
-let timer=null,tab="teams";
-function shell(inner,nav=true){app.innerHTML=`<h1>🤖 AI Tech Treasure Hunt</h1>${nav?`<nav><a class="btn s" style="color:var(--tx)" href="#/register">Register</a><a class="btn s" style="color:var(--tx)" href="#/start">Start / Continue</a><a class="btn s" style="color:var(--tx)" href="#/admin">Admin</a></nav>`:""}${inner}`}
+let timer=null,tab="teams",cfTimer=null;
+function shell(inner,nav=true){stopConfetti();app.innerHTML=`<h1>🤖 AI Tech Treasure Hunt</h1>${nav?`<nav><a class="btn s" style="color:var(--tx)" href="#/register">Register</a><a class="btn s" style="color:var(--tx)" href="#/continue">Continue (I have a code)</a></nav>`:""}${inner}`}
+// ---------- confetti ----------
+function stopConfetti(){cancelAnimationFrame(cfTimer);const c=$("#cf");c.getContext("2d").clearRect(0,0,c.width,c.height)}
+function confetti(big){const c=$("#cf"),x=c.getContext("2d");c.width=innerWidth;c.height=innerHeight;const cols=["#ff7a00","#e91e63","#5b3df5","#00bcd4","#ffd600","#12a150"];
+ const P=Array.from({length:big?260:140},()=>({x:Math.random()*c.width,y:-20-Math.random()*c.height,w:6+Math.random()*8,h:8+Math.random()*10,vy:2+Math.random()*4,vx:-2+Math.random()*4,r:Math.random()*6,vr:-.2+Math.random()*.4,c:cols[Math.random()*6|0]}));
+ const end=Date.now()+(big?20000:9000);(function f(){x.clearRect(0,0,c.width,c.height);P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;if(p.y>c.height&&Date.now()<end){p.y=-20;p.x=Math.random()*c.width}x.save();x.translate(p.x,p.y);x.rotate(p.r);x.fillStyle=p.c;x.fillRect(-p.w/2,-p.h/2,p.w,p.h);x.restore()});if(Date.now()<end+4000)cfTimer=requestAnimationFrame(f);else x.clearRect(0,0,c.width,c.height)})()}
+function celebrate(name,rank){const w=rank===1;shell(`<div class="card win"><div class="trophy">${w?"🏆":"🎉"}</div><div class="big ${w?"ok":""}">${w?"🥇 WINNER! 🥇":"Hunt Completed!"}</div><div class="tn">${esc(name)}</div><p style="font-size:20px">${w?"You were the FIRST team to finish all checkpoints!":"Congratulations! You finished at position <b>#"+rank+"</b>."}</p><p style="font-size:34px">🎊 ✨ 🎈 ✨ 🎊</p><p class="mu">Please show this screen to the coordinator.</p></div>`,false);confetti(w)}
+// ---------- router ----------
 async function route(){clearInterval(timer);const h=location.hash.slice(1)||"/register";
- if(h==="/register")return reg();if(h==="/start")return start();if(h==="/team")return teamPage();
- if(h.startsWith("/cp/"))return checkpoint(h.slice(4));if(h==="/admin")return LS.g("adm")?dash():login();reg()}
-function reg(){shell(`<div class="card"><h2>Register your team</h2><input id="tn" placeholder="Team name" maxlength="40"><p class="mu">Team members (max ${MAXM})</p>${Array.from({length:MAXM},(_,i)=>`<input class="mb" maxlength="40" placeholder="Member ${i+1} name${i?" (optional)":""}">`).join("")}<p id="err" class="bad"></p><button id="go">Register</button></div>`);
- $("#go").onclick=async()=>{const r=await api("/api/register","POST",{name:$("#tn").value,members:[...document.querySelectorAll(".mb")].map(i=>i.value)});
-  if(r.error)return $("#err").textContent=r.error;
-  shell(`<div class="card"><h2 class="ok">Team registered ✅</h2><p>${esc(r.name)}</p><p>Your team code (save it / take a screenshot!):</p><div class="code">${r.code}</div><p class="mu">Enter this code at the start link to begin the hunt.</p><a class="btn" href="#/start">Go to Start</a></div>`)}}
-function start(){shell(`<div class="card"><h2>Enter your team code</h2><input id="c" placeholder="AIH-XXXX" style="text-transform:uppercase" value="${esc(LS.g("code")||"")}"><p id="err" class="bad"></p><button id="go">Start hunt</button></div>`);
- $("#go").onclick=async()=>{const code=$("#c").value.trim().toUpperCase(),r=await api("/api/start","POST",{code});
-  if(r.error)return $("#err").textContent=r.error;LS.s("code",code);location.hash="#/team"}}
-async function teamPage(){const code=LS.g("code");if(!code)return start();const t=await api("/api/team?code="+encodeURIComponent(code));if(t.error){LS.s("code",null);return start()}
- if(!t.started)return shell(`<div class="card"><h2>${esc(t.name)}</h2><p>You haven't started yet.</p><a class="btn" href="#/start">Start hunt</a></div>`,false);
- shell(`<div class="card"><h2>${esc(t.name)}</h2><div class="bar"><i style="width:${t.progress/TOTAL*100}%"></i></div><p>Progress: <b>${t.progress}/${TOTAL}</b> checkpoints</p>
- ${t.finishedAt?`<h2 class="ok">${t.winner?"🏆 You are the WINNER!":"🎉 You finished all checkpoints!"}</h2><p class="mu">Finished at ${fmt(t.finishedAt)}</p>`:`<p>Next clue:</p><div class="clue">${esc(t.clue)}</div><p class="mu">Reach the location, scan the QR code there and answer the question.</p>`}</div>`,false)}
-async function checkpoint(tok){const code=LS.g("code");const r=await api(`/api/cp?token=${encodeURIComponent(tok)}&code=${encodeURIComponent(code||"")}`);
- const msg=(h,t,b="")=>shell(`<div class="card"><h2 class="${b}">${h}</h2><p>${t}</p><a class="btn" href="#/team">My clue / progress</a></div>`,false);
- if(r.status==="invalid")return msg("Invalid link","This checkpoint link is not valid.","bad");
- if(r.status==="nocode")return shell(`<div class="card"><p>Enter your team code first.</p><a class="btn" href="#/start">Enter code</a></div>`,false);
- if(r.status==="notstarted")return msg("Not started","Your team hasn't started the hunt yet.","bad");
- if(r.status==="finished")return teamPage();
- if(r.status==="done")return msg("Already completed ✔️","You've already completed this checkpoint.");
- if(r.status==="wrong")return msg("Not your next checkpoint ❌","Follow your own clue to find the right location.","bad");
- if(r.status!=="ok")return msg("Oops",esc(r.error||"Something went wrong."),"bad");
- shell(`<div class="card"><h2>Checkpoint reached 📍</h2><p><b>${esc(r.q)}</b></p>${r.o.map((o,i)=>`<button class="opt" data-i="${i}">${esc(o)}</button>`).join("")}<p id="err" class="bad"></p></div>`,false);
- document.querySelectorAll(".opt").forEach(b=>b.onclick=async()=>{const a=await api("/api/answer","POST",{code,token:tok,choice:+b.dataset.i});
-  if(a.error)return $("#err").textContent=a.error;if(!a.correct)return $("#err").textContent="Wrong answer, try again!";
-  if(a.finished)shell(`<div class="card"><h2 class="ok">Correct! 🎉 All checkpoints done!</h2><p>${a.winner?"🏆 You are the WINNER (first to finish)!":"You finished the hunt. Check with the coordinator for the final result."}</p></div>`,false);
-  else shell(`<div class="card"><h2 class="ok">Correct! ✅</h2><p>Checkpoint ${a.progress}/${TOTAL} done. Your next clue:</p><div class="clue">${esc(a.nextClue)}</div><br><a class="btn" href="#/team">Back to my progress</a></div>`,false)})}
-function login(){shell(`<div class="card"><h2>Coordinator login</h2><input id="u" placeholder="Email / username"><input id="p" type="password" placeholder="Password"><p id="err" class="bad"></p><button id="go">Login</button></div>`);
+ if(h==="/register")return reg();if(h==="/continue")return cont();if(h.startsWith("/cp/"))return scan(h.slice(4));
+ if(h==="/admin")return LS.g("adm")?dash():login();reg()}
+// ---------- registration ----------
+function reg(){shell(`<div class="card"><h2>Register your team</h2><input id="tn" placeholder="Team name" maxlength="40"><p class="mu" style="margin:8px 0 0">Team members (max 3)</p>${[1,2,3].map(i=>`<input class="mb" maxlength="40" placeholder="Member ${i} name${i>1?" (optional)":""}">`).join("")}<input id="ph" type="tel" placeholder="Contact number" maxlength="15"><input id="sc" placeholder="School name" maxlength="80"><p id="err" class="bad"></p><button id="go">Register & start</button></div>`);
+ $("#go").onclick=async()=>{const b=$("#go");b.disabled=true;const r=await api("/api/register","POST",{name:$("#tn").value,members:[...document.querySelectorAll(".mb")].map(i=>i.value),phone:$("#ph").value,school:$("#sc").value});b.disabled=false;
+  if(r.error)return $("#err").textContent=r.error;LS.s("code",r.code);
+  shell(`<div class="card"><h2 class="ok">Team registered ✅</h2><p><b>${esc(r.name)}</b></p><p>Your TEAM CODE (write it down / take a screenshot — you will need it at every location):</p><div class="code">${r.code}</div><br><button id="nx">Continue to first question →</button></div>`,false);
+  $("#nx").onclick=()=>question(r.code,"start")}}
+function cont(){shell(`<div class="card"><h2>Enter your team code</h2><input id="c" placeholder="AIH-XXXX" style="text-transform:uppercase"><p id="err" class="bad"></p><button id="go">Continue</button></div>`);
+ $("#go").onclick=async()=>{const code=$("#c").value.trim().toUpperCase(),t=await api("/api/team?code="+encodeURIComponent(code));if(t.error)return $("#err").textContent=t.error;
+  if(t.finishedAt)return celebrate(t.name,t.rank);if(t.progress===0)return question(code,"start");clueCard(t.name,t.progress,t.total,t.clue)}}
+function scan(tok){shell(`<div class="card"><h2>📍 Checkpoint reached</h2><p>Enter your team code to get your question.</p><input id="c" placeholder="AIH-XXXX" style="text-transform:uppercase"><p id="err" class="bad"></p><button id="go">Get question</button></div>`,false);
+ $("#go").onclick=()=>{const c=$("#c").value.trim().toUpperCase();if(!c)return $("#err").textContent="Enter your team code.";question(c,tok)}}
+function clueCard(name,p,total,clue,head){shell(`<div class="card"><h2 class="ok">${head||"Your next clue"}</h2><div class="bar"><i style="width:${(p-1)/(total-1)*100}%"></i></div><p class="mu">Location ${p-1} of ${total-1} unlocked · ${esc(name)}</p><div class="clue">${esc(clue)}</div><p class="mu">Find the place, scan the QR code there and enter your team code again.</p></div>`,false)}
+// ---------- question ----------
+async function question(code,tok){const r=await api(`/api/question?token=${encodeURIComponent(tok)}&code=${encodeURIComponent(code)}`);
+ const msg=(h,t,c="bad",extra="")=>shell(`<div class="card"><h2 class="${c}">${h}</h2><p>${t}</p>${extra}</div>`,false);
+ const back=`<a class="btn" href="#/continue">My progress / clue</a>`;
+ if(r.status==="nocode")return shell(`<div class="card"><h2 class="bad">Invalid team code ❌</h2><p>Check your code and try again.</p><a class="btn" href="#/${tok==="start"?"continue":"cp/"+tok}">Try again</a></div>`,false);
+ if(r.status==="invalid")return msg("Invalid QR code","This checkpoint link is not valid.");
+ if(r.status==="finished")return celebrate(r.team.name,r.team.rank);
+ if(r.status==="needstart")return msg("Answer the first question first","Finish your registration question before visiting checkpoints.","bad",back);
+ if(r.status==="startdone")return clueCard(r.team.name,r.team.progress,r.team.total,r.team.clue);
+ if(r.status==="done")return msg("Already completed ✔️","Your team has already finished this checkpoint.","ok",back);
+ if(r.status==="wrong")return msg("Not your next location ❌","This is not the place your clue points to. Read your clue again and find the correct location.","bad",back);
+ if(r.status!=="ok")return msg("Oops",esc(r.error||"Something went wrong."));
+ shell(`<div class="card" id="qc"><p class="mu">${esc(r.name)} · Question ${r.step} of ${r.total}</p><div class="bar"><i style="width:${(r.step-1)/r.total*100}%"></i></div><h2 style="margin-top:14px">${esc(r.q)}</h2>${r.o.map((o,i)=>`<button class="opt" data-i="${i}">${esc(o)}</button>`).join("")}<p id="err" class="bad"></p></div>`,false);
+ const opts=[...document.querySelectorAll(".opt")];let tm;
+ const lock=s=>{opts.forEach(b=>b.disabled=true);clearInterval(tm);const f=()=>{if(s<=0){clearInterval(tm);opts.forEach(b=>b.disabled=false);$("#err").textContent="";return}$("#err").textContent=`❌ Wrong answer! Try again in ${s}s…`;s--};f();tm=setInterval(f,1000)};
+ if(r.wait)lock(r.wait);
+ opts.forEach(b=>b.onclick=async()=>{opts.forEach(x=>x.disabled=true);const a=await api("/api/answer","POST",{code,token:tok,choice:+b.dataset.i});
+  if(a.error){opts.forEach(x=>x.disabled=false);return $("#err").textContent=a.error}
+  if(!a.correct){const c=$("#qc");c.classList.remove("shake");void c.offsetWidth;c.classList.add("shake");return lock(a.wait||10)}
+  if(a.finished)return celebrate(a.name,a.rank);
+  clueCard(a.name,a.progress,a.total,a.clue,"Correct! ✅ Here is your next clue")})}
+// ---------- admin ----------
+function login(){shell(`<div class="card"><h2>Coordinator login</h2><input id="u" placeholder="Email / username"><input id="p" type="password" placeholder="Password"><p id="err" class="bad"></p><button id="go">Login</button></div>`,false);
  $("#go").onclick=async()=>{const r=await api("/api/admin/login","POST",{user:$("#u").value.trim(),pass:$("#p").value});if(r.token){LS.s("adm",r.token);route()}else $("#err").textContent=r.error}}
 async function dash(){const d=await api("/api/admin/teams");if(d._s===401){LS.s("adm",null);return login()}
- const ts=d.teams||[];const btn=(k,l)=>`<button class="${tab===k?"on":"s"}" data-t="${k}">${l}</button>`;let body="";
- if(tab==="teams")body=ts.length?`<p class="mu">${ts.length} team(s) registered</p><div class="scroll"><table><tr><th>Team</th><th>Code</th><th>Members</th><th>Registered</th></tr>${ts.map(t=>`<tr><td>${esc(t.name)}</td><td>${t.code}</td><td>${t.members.map(esc).join(", ")}</td><td>${fmt(t.createdAt)}</td></tr>`).join("")}</table></div>`:"<p>No teams yet.</p>";
+ const ts=d.teams||[],o=location.origin;const btn=(k,l)=>`<button class="${tab===k?"on":"s"}" data-t="${k}">${l}</button>`;let body="",cfg=null;
+ if(tab==="teams")body=ts.length?`<p class="mu">${ts.length} team(s) registered</p><div class="scroll"><table><tr><th>Team</th><th>Code</th><th>Members</th><th>Contact</th><th>School</th><th>Time</th></tr>${ts.map(t=>`<tr><td>${esc(t.name)}</td><td><b>${t.code}</b></td><td>${t.members.map(esc).join(", ")}</td><td>${esc(t.phone)}</td><td>${esc(t.school)}</td><td>${fmt(t.createdAt)}</td></tr>`).join("")}</table></div>`:"<p>No teams yet.</p>";
  if(tab==="progress"){const r=[...ts].sort((a,b)=>(a.finishedAt||9e15)-(b.finishedAt||9e15)||b.progress-a.progress);
-  body=`<div class="scroll"><table><tr><th>Team</th><th>Stage</th><th>Route</th><th>Started</th><th>Finished</th></tr>${r.map(t=>`<tr><td>${t.winner?"🏆 ":""}${esc(t.name)}</td><td>${t.route?t.progress+"/"+d.total:"Not started"}</td><td>${t.route?t.route.join("-"):"-"}</td><td>${fmt(t.startedAt)}</td><td>${fmt(t.finishedAt)}</td></tr>`).join("")}</table></div><p class="mu">Auto-refreshes every 5 seconds.</p>`}
- if(tab==="links"){const l=(await api("/api/admin/links")).links||[];const o=location.origin;
-  body=`<div class="grid">${l.map(c=>`<div class="card"><b>Checkpoint ${c.id}</b><div class="qr" data-u="${o}/#/cp/${c.token}" style="margin:8px 0"></div><div class="mu" style="word-break:break-all">${o}/#/cp/${c.token}</div></div>`).join("")}</div><p class="mu">Print this page (Ctrl+P) and place one QR at each location. Start link: ${o}/#/start</p>`}
- shell(`<div class="card"><nav>${btn("teams","Registered Teams")}${btn("progress","Team Progress")}${btn("links","Checkpoint Links / QR")}<button class="s" id="lo">Logout</button></nav>${body}</div>`,false);
+  body=`<div class="scroll"><table><tr><th>Team</th><th>Stage</th><th>Route (locations)</th><th>Finished</th></tr>${r.map(t=>`<tr><td>${t.rank===1?"🏆 ":""}${esc(t.name)}</td><td>${t.progress===0?"First question":t.finishedAt?"Finished #"+t.rank:"Cleared "+(t.progress-1)+"/"+(d.total-1)+" locations"}</td><td>${t.route.map((x,i)=>i===t.progress-1?"<b>["+esc(x)+"]</b>":i<t.progress-1?"✔"+esc(x):esc(x)).join(" → ")}</td><td>${fmt(t.finishedAt)}</td></tr>`).join("")}</table></div><p class="mu">[ ] = location the team is heading to now. Auto-refreshes every 5 seconds.</p>`}
+ if(tab==="links"||tab==="content"){cfg=await api("/api/admin/config")}
+ if(tab==="links"){const L=cfg.locations;const card=(t,u,n)=>`<div class="card"><b>${t}</b><div class="qr" data-u="${u}" style="margin:8px 0"></div><div class="mu" style="word-break:break-all">${u}</div>${n?`<div class="noprint mu">${n}</div>`:""}</div>`;
+  body=`<div class="grid">${card("📝 REGISTRATION QR (same for all teams)",o+"/#/register","Place at the starting point.")}${L.map(l=>card("📍 Location QR "+l.id,o+"/#/cp/"+l.token,"Place at: <b>"+esc(l.label)+"</b>")).join("")}</div><p class="mu np">6 QR codes in total. Press Ctrl+P to print this page. Location QRs are the same for all teams; each team reaches them in a different order.</p>`}
+ if(tab==="content"){body=`<h2>Location clues</h2><p class="mu">The clue is shown to a team after they answer correctly. Don't write the place name in the clue. The place name below is only for you (admin).</p>${cfg.locations.map(l=>`<div class="card" data-l="${l.id}"><b>Location ${l.id}</b><input class="lb" value="${esc(l.label)}" placeholder="Place name (admin only)"><textarea class="cl" rows="2">${esc(l.clue)}</textarea><button class="sv">Save</button> <span class="mu"></span></div>`).join("")}
+  <h2>Question pool (${cfg.questions.length}) <span class="mu">— each team gets ${cfg.need} random questions from this pool</span></h2>${cfg.questions.map(q=>`<div class="card"><b>${esc(q.q)}</b><br>${q.o.map((x,i)=>i===q.a?`<span class="ok">✔ ${esc(x)}</span>`:esc(x)).join(" · ")}<br><br><button class="s dq" data-id="${q.id}">Delete</button></div>`).join("")}
+  <div class="card"><h2>Add a question</h2><input id="nq" placeholder="Question"><input class="no" placeholder="Option 1"><input class="no" placeholder="Option 2"><input class="no" placeholder="Option 3"><input class="no" placeholder="Option 4"><select id="na"><option value="0">Correct: Option 1</option><option value="1">Correct: Option 2</option><option value="2">Correct: Option 3</option><option value="3">Correct: Option 4</option></select><p id="qe" class="bad"></p><button id="aq">Add question</button></div>`}
+ shell(`<div class="card"><nav>${btn("teams","Registered Teams")}${btn("progress","Team Progress")}${btn("links","QR Codes (6)")}${btn("content","Questions & Clues")}<button class="s" id="lo">Logout</button></nav>${body}${tab==="teams"?`<br><button class="s" id="ra">Clear all teams (after testing)</button>`:""}</div>`,false);
  document.querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>{tab=b.dataset.t;dash()});
  $("#lo").onclick=()=>{LS.s("adm",null);route()};
  document.querySelectorAll(".qr").forEach(e=>{try{new QRCode(e,{text:e.dataset.u,width:150,height:150})}catch(x){e.textContent="QR unavailable"}});
+ const ra=$("#ra");if(ra)ra.onclick=async()=>{if(confirm("Delete ALL registered teams? Use this only to clear test data.")){await api("/api/admin/reset-all","POST",{});dash()}};
+ document.querySelectorAll(".sv").forEach(b=>b.onclick=async()=>{const c=b.closest("[data-l]");await api("/api/admin/location","POST",{id:c.dataset.l,label:c.querySelector(".lb").value,clue:c.querySelector(".cl").value});b.nextElementSibling.textContent="Saved ✔"});
+ document.querySelectorAll(".dq").forEach(b=>b.onclick=async()=>{const r=await api("/api/admin/question/delete","POST",{id:b.dataset.id});if(r.error)alert(r.error);else dash()});
+ const aq=$("#aq");if(aq)aq.onclick=async()=>{const r=await api("/api/admin/question","POST",{q:$("#nq").value,o:[...document.querySelectorAll(".no")].map(i=>i.value),a:+$("#na").value});if(r.error)$("#qe").textContent=r.error;else dash()};
  if(tab==="progress")timer=setInterval(()=>{if(location.hash==="#/admin")dash()},5000)}
 window.addEventListener("hashchange",route);route();
 </script></body></html>
