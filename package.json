@@ -1,0 +1,8 @@
+{
+  "name": "ai-tech-treasure-hunt",
+  "version": "1.0.0",
+  "description": "AI Tech Treasure Hunt - zero-dependency Node server",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" }
+}
